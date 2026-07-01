@@ -6,7 +6,7 @@ FC = gfortran
 
 GENFLGS = -cpp -ffree-line-length-none
 
-LDFLAGS = -lblas -llapack
+LDFLAGS = -L$(EBROOTOPENBLAS)/lib -lopenblas
 #If Intel oneAPI MKL is used put this instead:
 #LDFLAGS = -I/opt/intel/oneapi/mkl/latest/include -L/opt/intel/oneapi/mkl/latest/lib/intel64 -Wl,--no-as-needed -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl
 

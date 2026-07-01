@@ -33,8 +33,8 @@ K multipolarity   =      0     | 0 <= K <= J.                            |
 Isospin           =      1     | 0 == Isoscalar, 1 == Isovector.         |
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
 Omega start       =      0.000 | [MeV] Energy sweep parameters,          |
-Omega end         =      1.000 | [MeV] relevant only if calculation      |
-Delta omega       =      1.000 | [MeV] type is set to 0 or 1.            |
+Omega end         =     40.000 | [MeV] relevant only if calculation      |
+Delta omega       =      0.100 | [MeV] type is set to 0 or 1.            |
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
 Omega print       =     25.000 | [MeV] Relevant if cal. type is 2.       |
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
