@@ -193,7 +193,7 @@
 
               phi_n = (-pi/2.d0)+(pi*ipoint)/NoContourPoints;
 
-              omega_gamma = omega_radius*exp(II*phi_n);
+              omega_gamma = omega_center + omega_radius*exp(II*phi_n);
               relResError = iter_fam( omega_gamma , NoArnoldiVectors , selfConsistencyTolerance );
 
               S    = fam_strength();
