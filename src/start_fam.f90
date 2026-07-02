@@ -191,9 +191,9 @@
           contour_integral = cmplx( 0.d0 , 0.d0 , kind=8 );
           do ipoint = 0 , NoContourPoints
 
-              phi_n = (2*pi*ipoint)/NoContourPoints;
+              phi_n = (-pi/2.d0)+(pi*ipoint)/NoContourPoints;
 
-              omega_gamma = omega_center + omega_radius*exp(II*phi_n);
+              omega_gamma = omega_radius*exp(II*phi_n);
               relResError = iter_fam( omega_gamma , NoArnoldiVectors , selfConsistencyTolerance );
 
               S    = fam_strength();
@@ -209,7 +209,7 @@
               w_n = merge( 4.d0 , 2.d0 , mod(ipoint,2)==1                       );
               w_n = merge( 1.d0 , w_n  , ipoint==0 .or. ipoint==NoContourPoints );
 
-              contour_integral = contour_integral + (2*pi/NoContourPoints)/3 * w_n * ( omega_radius/(2*pi) * S * exp(II*phi_n) );
+              contour_integral = contour_integral + (pi/NoContourPoints)/3.d0 * w_n * ( omega_radius/(2*pi) * S * exp(II*phi_n) );
 
           end do
 
