@@ -214,8 +214,7 @@
               w_n = merge( 1.d0 , w_n  , ipoint==0 .or. ipoint==NoContourPoints );
 
               contour_integral = contour_integral + (pi/NoContourPoints)/3.d0 * w_n * &
-( omega_radius/(2*pi) * (S/omega_gamma) * exp(II*phi_n) );
-
+                                 ( omega_radius/(2*pi) * (S/omega_gamma) * exp(II*phi_n) );
           end do
 
           write(tape_strength,'(/,a,f14.7,a,f14.7,a)') 'Contour integration of strength function along a semi-circle with center omega0 = ' , omega_center , ', and radius R = ' , omega_radius , '.';
