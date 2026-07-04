@@ -185,6 +185,10 @@
 
 
 
+          ! Semicircular contour integration.
+          ! NoContourPoints is the number of Simpson subintervals.
+          ! The actual number of evaluated contour points is NoContourPoints + 1.
+
           ! We need even number of integration points for Simpson rule.
           NoContourPoints = NoContourPoints + merge( 1 , 0 , mod(NoContourPoints,2)==1 );
 
@@ -209,11 +213,12 @@
               w_n = merge( 4.d0 , 2.d0 , mod(ipoint,2)==1                       );
               w_n = merge( 1.d0 , w_n  , ipoint==0 .or. ipoint==NoContourPoints );
 
-              contour_integral = contour_integral + (pi/NoContourPoints)/3.d0 * w_n * ( omega_radius/(2*pi) * S * exp(II*phi_n) );
+              contour_integral = contour_integral + (pi/NoContourPoints)/3.d0 * w_n * &
+( omega_radius/(2*pi) * (S/omega_gamma) * exp(II*phi_n) );
 
           end do
 
-          write(tape_strength,'(/,a,f14.7,a,f14.7,a)') 'Contour integration of strength function along a circle with center omega0 = ' , omega_center , ', and radius R = ' , omega_radius , '.';
+          write(tape_strength,'(/,a,f14.7,a,f14.7,a)') 'Contour integration of strength function along a semi-circle with center omega0 = ' , omega_center , ', and radius R = ' , omega_radius , '.';
           write(tape_strength,'(a,i0,a)') 'Simpson''s integration rule with ' , NoContourPoints , ' points is used.';
           write(tape_strength,'(a,e16.9,a,e16.9,a)') '1/(2*pi*i) * integral_{C(omega0,R)} S(f,omega) domega = ' , real(contour_integral),' + ',imag(contour_integral),'i.';
           call flush(tape_strength);
