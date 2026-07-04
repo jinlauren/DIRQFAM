@@ -213,7 +213,7 @@
               w_n = merge( 4.d0 , 2.d0 , mod(ipoint,2)==1                       );
               w_n = merge( 1.d0 , w_n  , ipoint==0 .or. ipoint==NoContourPoints );
 
-              contour_integral = contour_integral + (pi/NoContourPoints)/3.d0 * w_n * &
+              contour_integral = contour_integral - (pi/NoContourPoints)/3.d0 * w_n * &
                                  ( omega_radius/(2*pi) * (S/omega_gamma) * exp(II*phi_n) );
           end do
 
