@@ -195,7 +195,7 @@
           contour_integral = cmplx( 0.d0 , 0.d0 , kind=8 );
           do ipoint = 0 , NoContourPoints
 
-              phi_n = (-pi/2.d0)+(pi*ipoint)/NoContourPoints;
+              phi_n = (pi/2.d0) - (pi*ipoint)/NoContourPoints;
 
               omega_gamma = omega_center + omega_radius*exp(II*phi_n);
               relResError = iter_fam( omega_gamma , NoArnoldiVectors , selfConsistencyTolerance );
@@ -219,8 +219,8 @@
           end do
 
           write(tape_strength,'(/,a,f14.7,a,f14.7,a)') 'Contour integration of strength function along a semi-circle with center omega0 = ' , omega_center , ', and radius R = ' , omega_radius , '.';
-          write(tape_strength,'(a,i0,a)') 'Simpson''s integration rule with ' , NoContourPoints , ' points is used.';
-          write(tape_strength,'(a,e16.9,a,e16.9,a)') '1/(2*pi*i) * integral_{C(omega0,R)} S(f,omega) domega = ' , real(contour_integral),' + ',imag(contour_integral),'i.';
+          write(tape_strength,'(a,i0,a)') 'Simpson''s integration rule with ' , NoContourPoints , ' subintervals is used.';
+          write(tape_strength,'(a,e16.9,a,e16.9,a)') '1/(2*pi*i) * integral_{C(omega0,R)} S(f,omega)/omega domega = ' , real(contour_integral),' + ',imag(contour_integral),'i.';
           call flush(tape_strength);
 
 
