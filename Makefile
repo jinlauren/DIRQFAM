@@ -36,6 +36,7 @@ DBG = $(GENFLGS) -D DEBUG -Og -g -Wall                              \
                                  -fstack-protector                  \
 
 SRCMOD =                       \
+./src/ddpc1_scan.f90           \
 ./src/modules/dirhbpar.f90     \
 ./src/modules/modules_grs.f90  \
 ./src/modules/modules_qfam.f90 \

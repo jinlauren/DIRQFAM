@@ -5261,6 +5261,8 @@ c     model-type   DD     density-dependent meson-coupling
 c                  PC     point-coupling
 c
 c---------------------------------------------------------------------c
+      use ddpc1_scan, only: ddpc1_scan_loaded, ddpc1_scan_b_tv,
+     &                      ddpc1_scan_d_tv, read_ddpc1_scan
       implicit real*8 (a-h,o-z)
 c
       logical lpr
@@ -5354,6 +5356,11 @@ c        vector-vector
          b_tv   =   1.8360d0            ! fm^-2
          c_tv   =   0.0000d0            ! fm^-2
          d_tv   =   0.6403d0
+         call read_ddpc1_scan()
+         if (ddpc1_scan_loaded) then
+            b_tv = ddpc1_scan_b_tv
+            d_tv = ddpc1_scan_d_tv
+         endif
 c
 c----- derivative terms                 ! MeV^-4
          ddsig  =  -0.8149d0
@@ -8184,4 +8191,3 @@ c
       return
 c-end STARTDEL
       end
-

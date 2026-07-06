@@ -1,0 +1,4 @@
+# Runtime DD-PC1 override for one calculation.
+# Format: b_TV d_TV
+# Default DD-PC1 values are 1.8360 0.6403.
+1.8360 0.6403

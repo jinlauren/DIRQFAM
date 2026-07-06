@@ -2,17 +2,19 @@
 #SBATCH --job-name=Yb160_K1_strength
 #SBATCH --output=slurm/logs/Yb160_K1_strength_%j.out
 #SBATCH --error=slurm/logs/Yb160_K1_strength_%j.err
-#SBATCH --time=04:00:00
+#SBATCH --time=10:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=40
-#SBATCH --mem=10G
+#SBATCH --cpus-per-task=6
+#SBATCH --mem-per-cpu=10G
 
 module purge
 module load GCC/12.3.0
 module load OpenBLAS/0.3.23-GCC-12.3.0
 
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 ROOT="$SLURM_SUBMIT_DIR"
 CALC="Yb160_K1_strength"

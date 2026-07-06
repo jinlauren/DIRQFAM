@@ -5,6 +5,7 @@
 !======================================================================!
       use fam_input;
       use basis;
+      use ddpc1ddme2, only : b_tv, d_tv;
       implicit none;
       integer , intent(in) :: tape;
 
@@ -14,6 +15,7 @@
           write(tape,'(a)') '';
           write(tape,'(a,a,a,i0,a)') 'Nucleus: ' , nucleusName , ' ' , nucleusZ+nucleusN , '.';
           write(tape,'(a,a,a)') 'Parametrization of the Lagrangian: ' , LagrangianModelName , '.';
+          if( LagrangianModelName=='DD-PC1' ) write(tape,'(a,f10.5,a,f10.5,a)') 'DD-PC1 scan parameters: b_TV = ' , b_tv , ', d_TV = ' , d_tv , '.';
           write(tape,'(a,sp,f6.3,a)') 'Ground state deformation beta = ' , betg , '.';
           write(tape,'(a,a,i0,a,i0,a)') merge('Isoscalar','Isovector',Isospin==0) , ' J = ' , J_multipole , ', K = ' , K_multipole , ' excitation.';
           if( any(calculation_type==[3,4]) ) then

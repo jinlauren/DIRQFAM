@@ -4,6 +4,8 @@
 
 !======================================================================!
       use fam_input;
+      use ddpc1ddme2, only : b_tv, d_tv;
+      use ddpc1_scan, only : ddpc1_scan_loaded, ddpc1_scan_b_tv, ddpc1_scan_d_tv, read_ddpc1_scan;
       implicit none;
       integer           :: unit;
       integer           :: ios;
@@ -66,6 +68,12 @@
           nucleusZ            = getAtomicNumberFromElementName( nucleusName );
           nucleusN            = nucA - nucleusZ;
           LagrangianModelName = trim(adjustl(parName));
+
+          call read_ddpc1_scan();
+          if( LagrangianModelName=='DD-PC1' .and. ddpc1_scan_loaded ) then
+              b_tv = ddpc1_scan_b_tv;
+              d_tv = ddpc1_scan_d_tv;
+          end if
 
 
           call assert( nucleusZ>=1 .and. nucleusN>=1 , 'Number of protons/neutrons wrong.' );
