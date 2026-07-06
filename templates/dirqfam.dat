@@ -1,7 +1,7 @@
 n0f, n0b =  16  50             ! Number of osc. shells (even numbers)
 beta0    =   +0.300            ! Deformation of the h.o. basis
 betai    =   +0.300            ! Deformation of the initial W.S. pot
-inin     =    1    1           ! Initialization from previous run
+inin     =    0    0           ! Initialization from previous run
 Yb 160                         ! Even-even nucleus under consideration
 c---------------------------------------------------------------------
 Init.Gap =    1.000     1.000  ! Initial values of the pairing gaps
@@ -15,7 +15,7 @@ cquad    =  0.010              ! Constraint stiffness constant
 
 
 ============================= QFAM INTERFACE =============================
-Calculation type  =      3     | 0 = Free response.                      |
+Calculation type  =      1     | 0 = Free response.                      |
                                | 1 = Sweep across omega range.           |
                                | 2 = Calculate and print for given omega.|
                                | 3 = Contour integration.                |
@@ -29,12 +29,12 @@ Solver tolerance  =      1.e-6 | GMRES relative residual error tolerance.|
 Arnoldi vectors   =     70     | Max. no. of Arnoldi vectors in GMRES.   |
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
 J multipolarity   =      1     | 0 <= J <= 5.                            |
-K multipolarity   =      1     | 0 <= K <= J.                            |
+K multipolarity   =      0     | 0 <= K <= J.                            |
 Isospin           =      1     | 0 == Isoscalar, 1 == Isovector.         |
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
 Omega start       =      0.000 | [MeV] Energy sweep parameters,          |
-Omega end         =     40.000 | [MeV] relevant only if calculation      |
-Delta omega       =      0.100 | [MeV] type is set to 0 or 1.            |
+Omega end         =      1.000 | [MeV] relevant only if calculation      |
+Delta omega       =      1.000 | [MeV] type is set to 0 or 1.            |
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
 Omega print       =     25.000 | [MeV] Relevant if cal. type is 2.       |
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|

@@ -2,8 +2,13 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SWEEP_DIR="${SWEEP_DIR:-$ROOT/jobs/sweep_btv_dtv}"
-TEMPLATE_INPUT="${1:-$ROOT/dirqfam.dat}"
+TEMPLATE_INPUT="${1:-$ROOT/templates/dirqfam.dat}"
+
+SCAN_NAME="${SCAN_NAME:-scan_btv_dtv_test}"
+NUCLEUS="${NUCLEUS:-Yb160}"
+K_LABEL="${K_LABEL:-K0}"
+CALC_TYPE="${CALC_TYPE:-strength}"
+SCAN_ROOT="${SCAN_ROOT:-$ROOT/runs/$SCAN_NAME/$K_LABEL/$CALC_TYPE}"
 
 B_MIN="${B_MIN:-1.0}"
 B_MAX="${B_MAX:-4.5}"
@@ -16,12 +21,6 @@ CPUS_PER_TASK="${CPUS_PER_TASK:-6}"
 MEM_PER_CPU="${MEM_PER_CPU:-10G}"
 TIME_LIMIT="${TIME_LIMIT:-10:00:00}"
 PARTITION="${PARTITION:-general-long}"
-JOB_NAME_PREFIX="${JOB_NAME_PREFIX:-Yb160_K0}"
-
-INPUTS_DIR="$SWEEP_DIR/inputs"
-RUNS_DIR="$SWEEP_DIR/runs"
-MANIFEST="$SWEEP_DIR/manifest.tsv"
-
 format_value() {
   awk -v x="$1" 'BEGIN { printf "%.4f", int(x*1000 + 0.5)/1000 }'
 }
@@ -57,12 +56,13 @@ if [[ ! -f "$TEMPLATE_INPUT" ]]; then
   echo "Missing DIRQFAM input template: $TEMPLATE_INPUT" >&2
   exit 1
 fi
+TEMPLATE_INPUT="$(cd "$(dirname "$TEMPLATE_INPUT")" && pwd)/$(basename "$TEMPLATE_INPUT")"
 
-mkdir -p "$INPUTS_DIR" "$RUNS_DIR"
-cp "$ROOT/run" "$INPUTS_DIR/run"
-cp "$TEMPLATE_INPUT" "$INPUTS_DIR/dirqfam.dat"
-
-printf "task_id\tb_TV\td_TV\trun_label\trun_dir\tparams_file\n" > "$MANIFEST"
+mkdir -p "$SCAN_ROOT"
+MANIFEST="$SCAN_ROOT/manifest.tsv"
+ARRAY_LOG_DIR="$SCAN_ROOT/array_logs"
+mkdir -p "$ARRAY_LOG_DIR"
+printf "task_id\tb_TV\td_TV\trun_label\trun_dir\tslurm_script\tmetadata_file\n" > "$MANIFEST"
 
 task_id=0
 for ((ib=0; ib<B_N; ib++)); do
@@ -72,29 +72,74 @@ for ((ib=0; ib<B_N; ib++)); do
   for ((id=0; id<D_N; id++)); do
     d_tv="$(format_value "$(grid_value "$D_MIN" "$D_MAX" "$D_N" "$id")")"
     d_label="dtv_$(path_value "$d_tv")"
-    run_dir="$RUNS_DIR/${b_label}_${d_label}"
-    params_file="$run_dir/params.yaml"
+    run_label="${b_label}_${d_label}"
+    run_dir="$SCAN_ROOT/$run_label"
+    slurm_script="$run_dir/run.slurm"
+    metadata_file="$run_dir/metadata.yaml"
 
     mkdir -p "$run_dir/output/GS_output" "$run_dir/output/QFAM_output" "$run_dir/logs"
 
-    cat > "$params_file" <<EOF
+    cat > "$metadata_file" <<EOF
+scan_name: $SCAN_NAME
+nucleus: $NUCLEUS
+k_label: $K_LABEL
+calculation_type: $CALC_TYPE
+run_label: $run_label
 b_TV: $b_tv
 d_TV: $d_tv
-run_label: ${b_label}_${d_label}
+template_input: $TEMPLATE_INPUT
+slurm_script: $slurm_script
+output_dir: $run_dir/output
+logs_dir: $run_dir/logs
 EOF
 
-    run_label="${b_label}_${d_label}"
-    printf "%d\t%s\t%s\t%s\t%s\t%s\n" "$task_id" "$b_tv" "$d_tv" "$run_label" "$run_dir" "$params_file" >> "$MANIFEST"
+    job_name="${NUCLEUS}_${K_LABEL}_${run_label}_${CALC_TYPE}"
+    cat > "$slurm_script" <<EOF
+#!/usr/bin/env bash
+#SBATCH --job-name=$job_name
+#SBATCH --output=logs/%j.out
+#SBATCH --error=logs/%j.err
+#SBATCH --time=$TIME_LIMIT
+#SBATCH --partition=$PARTITION
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=$CPUS_PER_TASK
+#SBATCH --mem-per-cpu=$MEM_PER_CPU
+
+set -euo pipefail
+
+module purge
+module load GCC/12.3.0
+module load OpenBLAS/0.3.23-GCC-12.3.0
+
+export OMP_NUM_THREADS="\$SLURM_CPUS_PER_TASK"
+export OPENBLAS_NUM_THREADS="\$SLURM_CPUS_PER_TASK"
+export MKL_NUM_THREADS="\$SLURM_CPUS_PER_TASK"
+
+cd "\$SLURM_SUBMIT_DIR"
+mkdir -p output/GS_output output/QFAM_output logs
+
+cp "$TEMPLATE_INPUT" dirqfam.dat
+cat > ddpc1_scan.in <<PARAMS
+# Format: b_TV d_TV
+$b_tv $d_tv
+PARAMS
+
+"$ROOT/run"
+EOF
+    chmod +x "$slurm_script"
+
+    printf "%d\t%s\t%s\t%s\t%s\t%s\t%s\n" "$task_id" "$b_tv" "$d_tv" "$run_label" "$run_dir" "$slurm_script" "$metadata_file" >> "$MANIFEST"
     task_id=$((task_id + 1))
   done
 done
 
 last_task=$((task_id - 1))
-cat > "$SWEEP_DIR/submit_array.slurm" <<EOF
+cat > "$SCAN_ROOT/submit_array.slurm" <<EOF
 #!/usr/bin/env bash
-#SBATCH --job-name=${JOB_NAME_PREFIX}_btv_dtv_strength
-#SBATCH --output=/dev/null
-#SBATCH --error=/dev/null
+#SBATCH --job-name=${NUCLEUS}_${K_LABEL}_${SCAN_NAME}_${CALC_TYPE}
+#SBATCH --output=$ARRAY_LOG_DIR/%A_%a.out
+#SBATCH --error=$ARRAY_LOG_DIR/%A_%a.err
 #SBATCH --time=$TIME_LIMIT
 #SBATCH --partition=$PARTITION
 #SBATCH --nodes=1
@@ -105,16 +150,9 @@ cat > "$SWEEP_DIR/submit_array.slurm" <<EOF
 
 set -euo pipefail
 
-module purge
-module load GCC/12.3.0
-module load OpenBLAS/0.3.23-GCC-12.3.0
-
-export OPENBLAS_NUM_THREADS="\${OPENBLAS_NUM_THREADS:-\$SLURM_CPUS_PER_TASK}"
-export OMP_NUM_THREADS="\${OMP_NUM_THREADS:-\$SLURM_CPUS_PER_TASK}"
-export MKL_NUM_THREADS="\${MKL_NUM_THREADS:-\$SLURM_CPUS_PER_TASK}"
-
 MANIFEST="$MANIFEST"
-INPUTS_DIR="$INPUTS_DIR"
+RUN_EXE="$ROOT/run"
+TEMPLATE_INPUT="$TEMPLATE_INPUT"
 
 row="\$(awk -v task_id="\$SLURM_ARRAY_TASK_ID" 'NR > 1 && \$1 == task_id { print; exit }' "\$MANIFEST")"
 if [[ -z "\$row" ]]; then
@@ -122,39 +160,50 @@ if [[ -z "\$row" ]]; then
   exit 1
 fi
 
-IFS=\$'\t' read -r task_id b_tv d_tv run_label run_dir params_file <<< "\$row"
+IFS=\$'\t' read -r task_id b_tv d_tv run_label run_dir slurm_script metadata_file <<< "\$row"
 
-job_name="${JOB_NAME_PREFIX}_\${run_label}_strength"
-if command -v scontrol >/dev/null 2>&1; then
-  scontrol update JobId="\$SLURM_JOB_ID" JobName="\$job_name" || true
-fi
+job_name="${NUCLEUS}_${K_LABEL}_\${run_label}_${CALC_TYPE}"
 
 mkdir -p "\$run_dir/output/GS_output" "\$run_dir/output/QFAM_output" "\$run_dir/logs"
-
 log_base="\$run_dir/logs/\${job_name}_\${SLURM_ARRAY_JOB_ID}_\${SLURM_ARRAY_TASK_ID}"
 exec > "\${log_base}.out" 2> "\${log_base}.err"
+
+if [[ -n "\${SLURM_JOB_ID:-}" ]] && command -v scontrol >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
+  timeout 5s scontrol update JobId="\$SLURM_JOB_ID" JobName="\$job_name" || true
+fi
 
 echo "job_name: \$job_name"
 echo "task_id: \$task_id"
 echo "b_TV: \$b_tv"
 echo "d_TV: \$d_tv"
+echo "run_label: \$run_label"
 echo "run_dir: \$run_dir"
+echo "metadata_file: \$metadata_file"
 
-cp "\$INPUTS_DIR/dirqfam.dat" "\$run_dir/dirqfam.dat"
-cat > "\$run_dir/ddpc1_scan.in" <<PARAMS
+module purge
+module load GCC/12.3.0
+module load OpenBLAS/0.3.23-GCC-12.3.0
+
+export OMP_NUM_THREADS="\$SLURM_CPUS_PER_TASK"
+export OPENBLAS_NUM_THREADS="\$SLURM_CPUS_PER_TASK"
+export MKL_NUM_THREADS="\$SLURM_CPUS_PER_TASK"
+
+cd "\$run_dir"
+
+cp "\$TEMPLATE_INPUT" dirqfam.dat
+cat > ddpc1_scan.in <<PARAMS
 # Format: b_TV d_TV
-# Generated at runtime from \$params_file
 \$b_tv \$d_tv
 PARAMS
 
-cd "\$run_dir"
-"\$INPUTS_DIR/run"
+"\$RUN_EXE"
 EOF
-chmod +x "$SWEEP_DIR/submit_array.slurm"
+chmod +x "$SCAN_ROOT/submit_array.slurm"
 
-echo "Prepared $task_id run directories under $SWEEP_DIR"
+echo "Prepared $task_id calculation directories under $SCAN_ROOT"
 echo "Manifest: $MANIFEST"
 echo "Single-point test:"
-echo "  sbatch --array=0-0 \"$SWEEP_DIR/submit_array.slurm\""
-echo "Array submission after the single point works:"
-echo "  sbatch \"$SWEEP_DIR/submit_array.slurm\""
+echo "  cd \"$(awk 'NR==2 { print $5 }' "$MANIFEST")\""
+echo "  sbatch \"$(awk 'NR==2 { print $6 }' "$MANIFEST")\""
+echo "Array submission:"
+echo "  sbatch \"$SCAN_ROOT/submit_array.slurm\""
